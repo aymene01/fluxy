@@ -9,7 +9,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
     healthcheck:
-      test: ['CMD', 'bash', '-c', "echo 'ok' | nc localhost 2181"]
+      test: ['CMD', 'bash', '-c', "echo 'ruok' | nc localhost 2181"]
       interval: 10s 
       timeout: 5s 
       retries: 5
@@ -53,7 +53,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
- 
+
   schema-registry:
     image: confluentinc/cp-schema-registry:7.4.0
     hostname: schema-registry
