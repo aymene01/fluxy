@@ -14,7 +14,6 @@ def get_data():
     data = data["results"][0]
     return data
 
-
 def format_data(res):
     data = {}
     location = res["location"]
@@ -22,17 +21,8 @@ def format_data(res):
     data["last_name"] = res["name"]["last"]
     data["gender"] = res["gender"]
     data["address"] = (
-        f"{(
-        str(location["street"]["number"])
-        + " "
-        + location["street"]["name"]
-        + ", "
-        + location["city"]
-        + ", "
-        + location["state"]
-        + ", "
-        + location["country"]
-    )}"
+        f"{str(location['street']['number'])} {location['street']['name']}, "
+        f"{location['city']}, {location['state']}, {location['country']}"
     )
     data["postcode"] = location["postcode"]
     data["email"] = res["email"]
@@ -51,15 +41,15 @@ def stream_data():
     print(json.dumps(data, indent=3))
 
 
-with DAG(
+dag = DAG(
     "user_automation",
     default_args=default_args,
-    schedule="@daily",
+    schedule_interval="@daily",
     catchup=False,
-) as dag:
-    streaming_task = PythonOperator(
-        task_id="stream_data_from_api", python_callable=stream_data
-    )
+)
 
-
-stream_data()
+stream_data_task = PythonOperator(
+    task_id="stream_data",
+    python_callable=stream_data,
+    dag=dag,
+)
