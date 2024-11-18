@@ -42,15 +42,17 @@ def stream_data():
     res = get_data()
     data = format_data(res)
     # print(json.dumps(data, indent=3))
-    producer = KafkaProducer(bootstrap_servers=["localhost:9092"], max_block_ms=5000)
+    producer = KafkaProducer(bootstrap_servers=["broker:29092"], max_block_ms=5000)
 
     producer.send("user_created", json.dumps(data).encode("utf-8"))
+    producer.flush()
+    producer.close()
 
 
 dag = DAG(
     "user_automation",
     default_args=default_args,
-    schedule_interval="@daily",
+    schedule="@daily",
     catchup=False,
 )
 
@@ -59,5 +61,3 @@ stream_data_task = PythonOperator(
     python_callable=stream_data,
     dag=dag,
 )
-
-stream_data()
