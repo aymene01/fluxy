@@ -1,5 +1,7 @@
 apache-airflow
 kafka-python-ng
+kafka-python
+confluent-kafka
 requests
 google-re2
 msgspec==0.16.0
