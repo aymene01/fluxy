@@ -1,10 +1,7 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-import json
 import requests
-from kafka import KafkaProducer
-import time
 
 
 default_args = {"owner": "Lokyra", "start_date": datetime(2024, 11, 3)}
@@ -39,25 +36,33 @@ def format_data(res):
 
 
 def stream_data():
-    res = get_data()
-    data = format_data(res)
-    # print(json.dumps(data, indent=3))
+    import json
+    from kafka import KafkaProducer
+    import time
+    import logging
+
     producer = KafkaProducer(bootstrap_servers=["broker:29092"], max_block_ms=5000)
+    curr_time = time.time()
 
-    producer.send("user_created", json.dumps(data).encode("utf-8"))
-    producer.flush()
-    producer.close()
+    while True:
+        if time.time() > curr_time + 60:
+            break
+        try:
+            res = get_data()
+            data = format_data(res)
+            producer.send("user_created", json.dumps(data).encode("utf-8"))
+            producer.flush()
+            producer.close()
+        except Exception as e:
+            logging.error(f"An error occured: {e}")
+            continue
 
 
-dag = DAG(
-    "user_automation",
-    default_args=default_args,
-    schedule="@daily",
-    catchup=False,
-)
+with DAG(
+    "user_automation", default_args=default_args, schedule="@daily", catchup=False
+) as dag:
 
-stream_data_task = PythonOperator(
-    task_id="stream_data",
-    python_callable=stream_data,
-    dag=dag,
-)
+    stream_data_task = PythonOperator(
+        task_id="stream_data",
+        python_callable=stream_data,
+    )
